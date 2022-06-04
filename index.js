@@ -39,11 +39,15 @@ app.get('/', function(req, res) {
 app.get('/api/shorturl/:id',async function(req, res) {
   const id = await Number(req.params.id);
   const data = await database.findOne({urlId: id});
-  res.json({ original_url: data.url, short_url: data.urlId });
+  return res.redirect(data.url);
 });
 
 app.post('/api/shorturl', async(req, res) => {
+  const urlPattern = /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g
   const url = await req.body.url;
+  if(!url.match(urlPattern)) {
+    return res.json({error: 'invalid url'})
+  }
   const data = await database.insertOne({url: url});
   setTimeout(async () => {
     const result = await database.findOne({_id: data.insertedId});
